@@ -222,13 +222,13 @@ exec --fail-on-error cargo %{args_string}
 description = "Check formatting for all workspace members"
 category = "Development"
 command = "cargo"
-args = ["fmt", "${WORKSPACE_FLAG}", "--", "--check"]
+args = ["fmt", "--all", "--", "--check"]
 
 [tasks.format_fix_all]
 description = "Fix formatting for all workspace members"
 category = "Development"
 command = "cargo"
-args = ["fmt", "${WORKSPACE_FLAG}"]
+args = ["fmt", "--all"]
 
 [tasks.fix_all]
 description = "Run cargo fix on all workspace members"

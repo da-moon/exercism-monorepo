@@ -4,8 +4,8 @@
 extend = [
   { path = "contrib/cargo-make/init/Makefile.toml" },
   { path = "contrib/cargo-make/core/Makefile.toml" },
-  { path = "contrib/cargo-make/crate/Makefile.toml" },
-  # { path = "contrib/cargo-make/workspace/Makefile.toml" },
+  # { path = "contrib/cargo-make/crate/Makefile.toml" },
+  { path = "contrib/cargo-make/workspace/Makefile.toml" },
   # { path = "contrib/cargo-make/targets/Makefile.toml" },
   # { path = "contrib/cargo-make/validation/Makefile.toml" },
   # { path = "contrib/cargo-make/packaging/Makefile.toml" },
