@@ -1,44 +1,42 @@
-use std::ops::Index ;
-// pub fn nth(n: u32) -> u32 {
-//     let mut primes : Vec<u32> = vec![2,3];
-//     // NOTE: in case n == 0 or n==1 , then there is no need to check for prime value. we can simply return primes[n]
-//     let mut iterations : u32 = 0 ;
-//     if (primes.len() as u32) <= n {
-//         iterations = (n - primes.len() as u32) +1 ; 
-//     }
-//     // NOTE: initializing variable that will hold the number we are testing to see if it is prime or not
-//     let mut curr : u32 = 0 ;
-//     while iterations > 0 {
-//         let mut is_prime = true;
-//         // NOTE: get the number greater than the last element in primes array 
-//         if *primes.last().unwrap() + 1 > curr {
-//             curr = *primes.last().unwrap() + 1 ;
-//         }
-//         // NOTE: iterate over primes array
-//         for i in primes.iter() {
-//             if curr % i == 0 { is_prime = false ; break ; } ;
-//         }
-//         if is_prime {
-//             iterations -=1 ;
-//             primes.push(curr);
-//             continue ;
-//         }
-//         curr +=1 ;
-//     }
-//     return *primes.index(usize::try_from(n).unwrap());
-// }
-pub fn nth(n: u32) -> u32 {
-    let mut primes = Vec::with_capacity((n as usize) + 1);
+pub fn nth(n: u32) -> Option<u32> {
+       let mut result : Option<u32> = None;
+    if n==1{
+        result = Some(2);
 
-    (2..)
-        .filter(|candidate| {
-            if !primes.iter().any(|i| candidate % i == 0) {
-                primes.push(*candidate);
-                true
-            } else {
-                false
+    }else if n==2{
+        result = Some(3);
+    }else if n>2{
+        let mut counter : u32 = n - 2;
+        let mut iterator : u32 = 4;
+
+        while counter>0{
+            let i : Option<u32> = counter.checked_sub(1);
+            if i.is_none() == false{
+                if isPrime(iterator) {
+                    result = Some(iterator);
+                    counter =i.unwrap();
+                }
+                iterator+=1;
+           }
+        }
+    }
+    result
+}
+fn isPrime(n:u32) -> bool {
+    if n == 2 {
+        true
+    } else if n % 2 == 0 || n == 1{
+        false
+    } else{
+        let mut result :bool = true;
+        let upperLimit = (n as f32).sqrt() as u32 + 1;
+        for i in 2..upperLimit+1{
+            if (n % i == 0)  {
+                result = false;
+                break;
             }
-        })
-        .nth(n as usize)
-        .unwrap()
+        }
+        result
+    }
+
 }
