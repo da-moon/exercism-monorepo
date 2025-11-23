@@ -1,0 +1,371 @@
+# Build / Check / Run tasks (host + target matrix) consolidated
+
+[tasks.build]
+description = "Build current crate or selected MEMBER (host)"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+args = array
+array_push ${args} "build"
+
+member = get_env MEMBER
+if not is_empty ${member}
+    array_push ${args} "-p"
+    array_push ${args} ${member}
+end
+
+cargo_args = get_env CARGO_BUILD_ARGS
+if not is_empty ${cargo_args}
+    parts = split ${cargo_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+msg_fmt = get_env MESSAGE_FORMAT
+if not is_empty ${msg_fmt}
+    parts = split ${msg_fmt} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.check]
+description = "cargo check current crate or MEMBER"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+args = array
+array_push ${args} "check"
+
+member = get_env MEMBER
+if not is_empty ${member}
+    array_push ${args} "-p"
+    array_push ${args} ${member}
+end
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+msg_fmt = get_env MESSAGE_FORMAT
+if not is_empty ${msg_fmt}
+    parts = split ${msg_fmt} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.run]
+description = "cargo run (current crate or MEMBER)"
+category = "Run"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+args = array
+array_push ${args} "run"
+
+member = get_env MEMBER
+if not is_empty ${member}
+    array_push ${args} "-p"
+    array_push ${args} ${member}
+end
+
+run_args = get_env RUN_ARGS
+if not is_empty ${run_args}
+    array_push ${args} "--"
+    parts = split ${run_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.build_all]
+description = "Build all workspace members (host)"
+category = "Build"
+dependencies = ["init"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+exec --fail-on-error cargo build --workspace
+'''
+
+[tasks.check_all]
+description = "cargo check --workspace"
+category = "Build"
+dependencies = ["init"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+exec --fail-on-error cargo check --workspace
+'''
+
+[tasks.build_member]
+description = "Build a specific workspace member (MEMBER=<name>)"
+category = "Build"
+condition = { env_set = ["MEMBER"] }
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+member = get_env MEMBER
+exec --fail-on-error cargo build -p ${member}
+'''
+
+[tasks.check_member]
+description = "cargo check a specific workspace member (MEMBER=<name>)"
+category = "Build"
+condition = { env_set = ["MEMBER"] }
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+member = get_env MEMBER
+exec --fail-on-error cargo check -p ${member}
+'''
+
+[tasks.run_member]
+description = "cargo run -p MEMBER"
+category = "Run"
+condition = { env_set = ["MEMBER"] }
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+member = get_env MEMBER
+args = array
+array_push ${args} "run"
+array_push ${args} "-p"
+array_push ${args} ${member}
+
+run_args = get_env RUN_ARGS
+if not is_empty ${run_args}
+    array_push ${args} "--"
+    parts = split ${run_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.build_targets]
+description = "Build for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Building for target: ${target}"
+        args = array
+        array_push ${args} "build"
+        if not is_empty ${member}
+            array_push ${args} "-p"
+            array_push ${args} ${member}
+        end
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        cargo_args = get_env CARGO_BUILD_ARGS
+        if not is_empty ${cargo_args}
+            parts = split ${cargo_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        feature_args = get_env FEATURE_ARGS
+        if not is_empty ${feature_args}
+            parts = split ${feature_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        message_format = get_env MESSAGE_FORMAT
+        if not is_empty ${message_format}
+            parts = split ${message_format} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
+
+[tasks.check_targets]
+description = "Run cargo check for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Checking target: ${target}"
+        args = array
+        array_push ${args} "check"
+        if not is_empty ${member}
+            array_push ${args} "-p"
+            array_push ${args} ${member}
+        end
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        feature_args = get_env FEATURE_ARGS
+        if not is_empty ${feature_args}
+            parts = split ${feature_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        message_format = get_env MESSAGE_FORMAT
+        if not is_empty ${message_format}
+            parts = split ${message_format} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
+
+[tasks.build_all_members_targets]
+description = "Build all workspace members for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+
+handle = glob_array "*/Cargo.toml"
+for path in ${handle}
+    member = dirname ${path}
+    if equals ${member} "."
+        continue
+    end
+    echo concat "=== Building member: " ${member} " ==="
+
+    for target in ${target_list}
+        target = trim ${target}
+        if is_empty ${target}
+            continue
+        end
+
+        echo concat "  Building for target: " ${target}
+        args = array
+        array_push ${args} "build"
+        array_push ${args} "-p"
+        array_push ${args} ${member}
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        feature_args = get_env FEATURE_ARGS
+        if not is_empty ${feature_args}
+            parts = split ${feature_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''

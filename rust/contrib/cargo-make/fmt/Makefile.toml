@@ -1,0 +1,64 @@
+# Format tasks (cargo fmt)
+
+[tasks.format]
+description = "cargo fmt (current crate or MEMBER)"
+category = "Fmt"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+args = array
+array_push ${args} "fmt"
+
+member = get_env MEMBER
+if not is_empty ${member}
+    array_push ${args} "-p"
+    array_push ${args} ${member}
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.format_all]
+description = "cargo fmt --all"
+category = "Fmt"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+exec --fail-on-error cargo fmt --all
+'''
+
+[tasks.format_fix]
+description = "cargo fmt then cargo fix (current crate or MEMBER)"
+category = "Fmt"
+dependencies = ["format"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+member = get_env MEMBER
+args = array
+array_push ${args} "fix"
+array_push ${args} "--allow-dirty"
+
+if not is_empty ${member}
+    array_push ${args} "-p"
+    array_push ${args} ${member}
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.format_fix_all]
+description = "cargo fmt --all then cargo fix --workspace"
+category = "Fmt"
+dependencies = ["format_all"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+exec --fail-on-error cargo fix --workspace --allow-dirty
+'''

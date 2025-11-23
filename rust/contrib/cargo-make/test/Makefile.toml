@@ -1,0 +1,150 @@
+# Test tasks (host + target matrix)
+
+[tasks.test]
+description = "cargo test (current crate or MEMBER)"
+category = "Test"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+args = array
+array_push ${args} "test"
+
+member = get_env MEMBER
+if not is_empty ${member}
+    array_push ${args} "-p"
+    array_push ${args} ${member}
+end
+
+test_args = get_env TEST_ARGS
+if not is_empty ${test_args}
+    array_push ${args} "--"
+    parts = split ${test_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.test_member]
+description = "cargo test -p MEMBER"
+category = "Test"
+condition = { env_set = ["MEMBER"] }
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+member = get_env MEMBER
+exec --fail-on-error cargo test -p ${member}
+'''
+
+[tasks.test_all]
+description = "cargo test --workspace"
+category = "Test"
+dependencies = ["init"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+exec --fail-on-error cargo test --workspace
+'''
+
+[tasks.test_targets]
+description = "Run cargo test for all specified targets"
+category = "Test"
+dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Testing target: ${target}"
+        args = array
+        array_push ${args} "test"
+        if not is_empty ${member}
+            array_push ${args} "-p"
+            array_push ${args} ${member}
+        end
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        test_args = get_env TEST_ARGS
+        if not is_empty ${test_args}
+            array_push ${args} "--"
+            parts = split ${test_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
+
+[tasks.test_all_members_targets]
+description = "Run cargo test for all workspace members across all targets"
+category = "Test"
+dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+
+handle = glob_array "*/Cargo.toml"
+for path in ${handle}
+    member = dirname ${path}
+    if equals ${member} "."
+        continue
+    end
+    echo concat "=== Testing member: " ${member} " ==="
+
+    for target in ${target_list}
+        target = trim ${target}
+        if is_empty ${target}
+            continue
+        end
+
+        echo concat "  Testing target: " ${target}
+        args = array
+        array_push ${args} "test"
+        array_push ${args} "-p"
+        array_push ${args} ${member}
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        test_args = get_env TEST_ARGS
+        if not is_empty ${test_args}
+            array_push ${args} "--"
+            parts = split ${test_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''

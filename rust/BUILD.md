@@ -3,7 +3,8 @@
 ## Workspace Layout
 - Root `Cargo.toml` is now a workspace; every Exercism exercise directory is a member crate.
 - Legacy template makefiles are preserved as `.bak` for reference only.
-- All automation lives in modular Cargo Make files under `contrib/cargo-make/`.
+- All automation lives in modular Cargo Make files under `contrib/cargo-make/`, grouped by cargo command:
+  - `fmt/` (cargo fmt), `build/` (build/check/run incl. targets), `test/` (cargo test), `clippy/` (lint), plus supporting `init/`, `core/`, `validation/`, `packaging/`, `shortcuts/`.
 
 ## Critical Build Rules
 - **Never** call `cargo build|check|test|fmt|clippy` directly; always go through `cargo make` tasks.

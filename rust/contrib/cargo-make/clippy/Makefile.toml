@@ -1,0 +1,197 @@
+# Clippy tasks (host + targets) and init_clippy
+
+[tasks.init_clippy]
+description = "Set CLIPPY_ARGS based on STRICT flag"
+category = "Init"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+strict = get_env STRICT
+clippy_base = get_env CLIPPY_BASE_ARGS
+if is_empty ${clippy_base}
+    clippy_base = ""
+end
+
+if equals ${strict} "1"
+    strict_deny = "-D warnings"
+    strict_allow = ""
+    clippy_args = concat ${strict_deny} " " ${strict_allow}
+    set_env CLIPPY_ARGS ${clippy_args}
+else
+    set_env CLIPPY_ARGS ${clippy_base}
+end
+'''
+
+[tasks.clippy]
+description = "Run clippy for current crate. In workspaces, clippy_member MEMBER=<crate> avoids changing directories."
+category = "Lint"
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+args = array
+array_push ${args} "clippy"
+
+clippy_args = get_env CLIPPY_ARGS
+if not is_empty ${clippy_args}
+    parts = split ${clippy_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.clippy_member]
+description = "Run clippy on a specific workspace member (use with MEMBER=<name>)"
+category = "Lint"
+condition = { env_set = ["MEMBER"] }
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+member = get_env MEMBER
+echo "Running clippy on member: ${member}"
+args = array
+array_push ${args} "clippy"
+array_push ${args} "-p"
+array_push ${args} ${member}
+
+clippy_args = get_env CLIPPY_ARGS
+if not is_empty ${clippy_args}
+    parts = split ${clippy_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.clippy_all]
+description = "Run clippy on all workspace members for host target"
+category = "Lint"
+dependencies = ["init"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+args = array
+array_push ${args} "clippy"
+array_push ${args} "--workspace"
+
+clippy_args = get_env CLIPPY_ARGS
+if not is_empty ${clippy_args}
+    parts = split ${clippy_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.clippy_targets]
+description = "Run clippy for all specified targets"
+category = "Lint"
+dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Running clippy for target: ${target}"
+        args = array
+        array_push ${args} "clippy"
+        if not is_empty ${member}
+            array_push ${args} "-p"
+            array_push ${args} ${member}
+        end
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        clippy_args = get_env CLIPPY_ARGS
+        if not is_empty ${clippy_args}
+            parts = split ${clippy_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
+
+[tasks.clippy_all_members_targets]
+description = "Run clippy on all workspace members for all specified targets"
+category = "Lint"
+dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+
+handle = glob_array "*/Cargo.toml"
+for path in ${handle}
+    member = dirname ${path}
+    if equals ${member} "."
+        continue
+    end
+    echo concat "=== Running clippy for member: " ${member} " ==="
+
+    for target in ${target_list}
+        target = trim ${target}
+        if is_empty ${target}
+            continue
+        end
+
+        args = array
+        array_push ${args} "clippy"
+        array_push ${args} "-p"
+        array_push ${args} ${member}
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        clippy_args = get_env CLIPPY_ARGS
+        if not is_empty ${clippy_args}
+            parts = split ${clippy_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
