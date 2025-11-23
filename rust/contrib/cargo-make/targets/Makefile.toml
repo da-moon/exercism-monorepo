@@ -321,8 +321,9 @@ for path in ${handle}
             if not is_empty ${target}
                 args = array
                 array_push ${args} "build"
-                array_push ${args} "-p"
-                array_push ${args} ${member}
+                array_push ${args} "--manifest-path"
+                mp = concat ${member} "/Cargo.toml"
+                array_push ${args} ${mp}
                 array_push ${args} "--target"
                 array_push ${args} ${target}
 
@@ -389,8 +390,9 @@ for path in ${handle}
             if not is_empty ${target}
                 args = array
                 array_push ${args} "check"
-                array_push ${args} "-p"
-                array_push ${args} ${member}
+                array_push ${args} "--manifest-path"
+                mp = concat ${member} "/Cargo.toml"
+                array_push ${args} ${mp}
                 array_push ${args} "--target"
                 array_push ${args} ${target}
 
@@ -446,8 +448,9 @@ for path in ${handle}
             if not is_empty ${target}
                 args = array
                 array_push ${args} "clippy"
-                array_push ${args} "-p"
-                array_push ${args} ${member}
+                array_push ${args} "--manifest-path"
+                mp = concat ${member} "/Cargo.toml"
+                array_push ${args} ${mp}
                 array_push ${args} "--target"
                 array_push ${args} ${target}
 
@@ -538,8 +541,9 @@ for path in ${handle}
                         echo "  Testing target ${target} with runner: ${runner}"
                         args = array
                         array_push ${args} "test"
-                        array_push ${args} "-p"
-                        array_push ${args} ${member}
+                        array_push ${args} "--manifest-path"
+                        mp = concat ${member} "/Cargo.toml"
+                        array_push ${args} ${mp}
                         array_push ${args} "--target"
                         array_push ${args} ${target}
 
@@ -572,8 +576,9 @@ for path in ${handle}
                     echo "  Testing target: ${target}"
                     args = array
                     array_push ${args} "test"
-                    array_push ${args} "-p"
-                    array_push ${args} ${member}
+                    array_push ${args} "--manifest-path"
+                    mp = concat ${member} "/Cargo.toml"
+                    array_push ${args} ${mp}
                     array_push ${args} "--target"
                     array_push ${args} ${target}
 

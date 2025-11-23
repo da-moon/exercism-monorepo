@@ -5,8 +5,8 @@ extend = [
   { path = "contrib/cargo-make/init/Makefile.toml" },
   { path = "contrib/cargo-make/core/Makefile.toml" },
   # { path = "contrib/cargo-make/crate/Makefile.toml" },
-  { path = "contrib/cargo-make/workspace/Makefile.toml" },
-  # { path = "contrib/cargo-make/targets/Makefile.toml" },
+  # { path = "contrib/cargo-make/workspace/Makefile.toml" },
+  { path = "contrib/cargo-make/targets/Makefile.toml" },
   # { path = "contrib/cargo-make/validation/Makefile.toml" },
   # { path = "contrib/cargo-make/packaging/Makefile.toml" },
   # { path = "contrib/cargo-make/shortcuts/Makefile.toml" },
@@ -23,7 +23,7 @@ init_task = "empty"
 [env]
 # Common arguments - can be overridden
 MESSAGE_FORMAT = { value = "--message-format=short", condition = { env_not_set = ["MESSAGE_FORMAT"] } }
-ALL_FEATURES   = { value = "--all-features",       condition = { env_not_set = ["ALL_FEATURES"] } }
+ALL_FEATURES   = { value = "",       condition = { env_not_set = ["ALL_FEATURES"] } }
 ALL_TARGETS    = { value = "--all-targets",         condition = { env_not_set = ["ALL_TARGETS"] } }
 FEATURES = { value = "", condition = { env_not_set = ["FEATURES"] } }
 
