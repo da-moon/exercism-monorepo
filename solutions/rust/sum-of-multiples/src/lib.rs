@@ -3,20 +3,22 @@ use std::collections::HashSet;
 pub fn sum_of_multiples(limit: u32, factors: &[u32]) -> u32 {
     factors
         .iter()
-        .map(|x|{*x})
+        .copied()
         .filter(|x|{
-           return  *x>0;
+            *x>0
         })
         .map(|x|{
-            let m = (1..)
+            (1..)
             .map_while(|xx|{
-               if xx * x < limit {
-                    return Some(xx * x)
-                }    
-                return None ;
+                // if xx * x < limit {
+                //     return Some(xx * x)
+                // }    
+                // None 
+                Some(xx * x)
+                .filter(|y| *y < limit)
+
             })
-            .collect::<HashSet<u32>>();
-            return m
+            .collect::<HashSet<u32>>()
         })
     .flatten()
     .collect::<HashSet<u32>>()
