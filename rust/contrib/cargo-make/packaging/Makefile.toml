@@ -7,112 +7,44 @@ script = '''
 #!@duckscript
 
 member = get_env MEMBER
-if is_empty ${member}
-    echo "MEMBER not set; skipping package_targets."
-    exit 0
-end
-
-# Ensure builds are up to date for all targets
-exec --fail-on-error cargo make --disable-check-for-updates build_targets
+member = trim ${member}
 
 targets = get_env TARGETS
 target_list = split ${targets} " "
 dist_dir = get_env DIST_DIR
 exe_suffix_env = get_env EXE_SUFFIX
 release = get_env RELEASE
+crate_name = basename ${member}
+crate_version = set dev
 
-member_toml = concat ${member} "/Cargo.toml"
-if not is_path_exists ${member_toml}
-    trigger_error concat "Unable to find Cargo.toml for member: " ${member}
-end
-
-cargo_content = readfile ${member_toml}
-crate_name = ""
-crate_version = ""
-lines = split ${cargo_content} \n
-in_package_section = ""
-for line in ${lines}
-    trimmed_line = trim ${line}
-    if starts_with ${trimmed_line} "["
-        if equals ${trimmed_line} "[package]"
-            in_package_section = "true"
-        else
-            in_package_section = ""
-        end
-    elif not is_empty ${in_package_section}
-        normalized_line = replace ${trimmed_line} " " ""
-        if starts_with ${normalized_line} "name="
-            parts = split ${trimmed_line} "\""
-            if greater_than ${parts.length} 1
-                crate_name = array_get ${parts} 1
-            else
-                parts = split ${trimmed_line} "="
-                if greater_than ${parts.length} 1
-                    value = array_get ${parts} 1
-                    crate_name = replace ${value} "\"" ""
-                    crate_name = trim ${crate_name}
-                end
-            end
-        elif starts_with ${normalized_line} "version="
-            parts = split ${trimmed_line} "\""
-            if greater_than ${parts.length} 1
-                crate_version = array_get ${parts} 1
-            else
-                parts = split ${trimmed_line} "="
-                if greater_than ${parts.length} 1
-                    value = array_get ${parts} 1
-                    crate_version = replace ${value} "\"" ""
-                    crate_version = trim ${crate_version}
-                end
-            end
-        end
-    end
-end
-
-if is_empty ${crate_name}
-    trigger_error "Failed to determine crate name"
-end
-if is_empty ${crate_version}
-    trigger_error "Failed to determine crate version"
-end
-
-# Determine binary names
-binary_names_str = ""
-in_bin = ""
-for line in ${lines}
-    t = trim ${line}
-    if starts_with ${t} "[[bin]]"
-        in_bin = "1"
-    elif starts_with ${t} "[["
-        in_bin = ""
-    elif starts_with ${t} "["
-        in_bin = ""
-    elif not is_empty ${in_bin}
-        if starts_with ${t} "name = "
-            parts = split ${t} "\""
-            if greater_than ${parts.length} 1
-                bn = array_get ${parts} 1
-                if not is_empty ${bn}
-                    binary_names_str = concat ${binary_names_str} " " ${bn}
-                end
-            end
-        end
-    end
-end
-
-# If no [[bin]], default to crate name when src/main.rs exists
-member_main_rs = concat ${member} "/src/main.rs"
-has_main = is_path_exists ${member_main_rs}
-if is_empty ${binary_names_str}
-    if ${has_main}
-        binary_names_str = ${crate_name}
+# Prefer the declared package version via `cargo pkgid` (workspace-safe)
+pkgid_cmd = concat "cargo pkgid --manifest-path " ${member} "/Cargo.toml"
+pkgid_raw = exec_output ${pkgid_cmd}
+if not is_empty ${pkgid_raw}
+    pkgid_raw = trim ${pkgid_raw}
+    parts_hash = split ${pkgid_raw} "#"
+    if array_size ${parts_hash} > 1
+        id_tail = array_get ${parts_hash} 1
     else
-        echo concat "Skipping " ${member} ": no binary targets found"
-        exit 0
+        id_tail = ${pkgid_raw}
+    end
+
+    parts_at = split ${id_tail} "@"
+    if array_size ${parts_at} > 1
+        crate_version = array_get ${parts_at} 1
     end
 end
 
-binary_names_str = trim ${binary_names_str}
+member_main_rs = concat ${member} "/src/main.rs"
+if is_path_exists ${member_main_rs}
+    binary_names_str = ${crate_name}
+else
+    msg = concat "Skipping " ${member}
+    msg = concat ${msg} ": no binary targets found"
+    echo ${msg}
+    exit 0
+end
+
 bin_list = split ${binary_names_str} " "
 
 for target in ${target_list}
@@ -133,7 +65,6 @@ for target in ${target_list}
                         src_binary = concat ${src_binary} ".exe"
                     end
                 elif not is_empty ${exe_suffix_env}
-                    # keep exe_suffix if provided for non-windows cross builds
                     src_binary = concat ${src_binary} ${exe_suffix_env}
                 end
                 if is_path_exists ${src_binary}
@@ -144,10 +75,14 @@ for target in ${target_list}
                         dest_name = concat ${dest_name} ".exe"
                     end
                     dest_path = concat ${dist_target_dir} "/" ${dest_name}
-                    echo concat "Copying " ${src_binary} " -> " ${dest_path}
+                    msg = concat "Copying " ${src_binary}
+                    msg = concat ${msg} " -> "
+                    msg = concat ${msg} ${dest_path}
+                    echo ${msg}
                     cp ${src_binary} ${dest_path}
                 else
-                    echo concat "Warning: Binary not found at " ${src_binary}
+                    msg = concat "Warning: Binary not found at " ${src_binary}
+                    echo ${msg}
                 end
             end
         end
@@ -163,144 +98,16 @@ script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
-targets = get_env TARGETS
-target_list = split ${targets} " "
-dist_dir = get_env DIST_DIR
-release = get_env RELEASE
-
-handle = glob_array */Cargo.toml
+handle = glob_array "*/Cargo.toml"
 for path in ${handle}
     member = dirname ${path}
-    if not equals ${member} "."
-        member_toml = concat ${member} "/Cargo.toml"
-        if not is_path_exists ${member_toml}
-            echo concat "Skipping " ${member} ": no Cargo.toml"
-        else
-            cargo_content = readfile ${member_toml}
-            lines = split ${cargo_content} \n
-            crate_name = ""
-            crate_version = ""
-            in_package_section = ""
-            for line in ${lines}
-                trimmed_line = trim ${line}
-                if starts_with ${trimmed_line} "["
-                    if equals ${trimmed_line} "[package]"
-                        in_package_section = "true"
-                    else
-                        in_package_section = ""
-                    end
-                elif not is_empty ${in_package_section}
-                    normalized_line = replace ${trimmed_line} " " ""
-                    if starts_with ${normalized_line} "name="
-                        parts = split ${trimmed_line} "\""
-                        if greater_than ${parts.length} 1
-                            crate_name = array_get ${parts} 1
-                        else
-                            parts = split ${trimmed_line} "="
-                            if greater_than ${parts.length} 1
-                                value = array_get ${parts} 1
-                                crate_name = replace ${value} "\"" ""
-                                crate_name = trim ${crate_name}
-                            end
-                        end
-                    elif starts_with ${normalized_line} "version="
-                        parts = split ${trimmed_line} "\""
-                        if greater_than ${parts.length} 1
-                            crate_version = array_get ${parts} 1
-                        else
-                            parts = split ${trimmed_line} "="
-                            if greater_than ${parts.length} 1
-                                value = array_get ${parts} 1
-                                crate_version = replace ${value} "\"" ""
-                                crate_version = trim ${crate_version}
-                            end
-                        end
-                    end
-                end
-            end
-
-            if is_empty ${crate_name}
-                echo concat "Skipping " ${member} ": crate name missing"
-                continue
-            end
-            if is_empty ${crate_version}
-                echo concat "Skipping " ${member} ": crate version missing"
-                continue
-            end
-
-            binary_names_str = ""
-            in_bin = ""
-            for line in ${lines}
-                t = trim ${line}
-                if starts_with ${t} "[[bin]]"
-                    in_bin = "1"
-                elif starts_with ${t} "[["
-                    in_bin = ""
-                elif starts_with ${t} "["
-                    in_bin = ""
-                elif not is_empty ${in_bin}
-                    if starts_with ${t} "name = "
-                        parts = split ${t} "\""
-                        if greater_than ${parts.length} 1
-                            bn = array_get ${parts} 1
-                            if not is_empty ${bn}
-                                binary_names_str = concat ${binary_names_str} " " ${bn}
-                            end
-                        end
-                    end
-                end
-            end
-
-            member_main_rs = concat ${member} "/src/main.rs"
-            if is_empty ${binary_names_str}
-                if is_path_exists ${member_main_rs}
-                    binary_names_str = ${crate_name}
-                else
-                    echo concat "Skipping " ${member} ": no binary targets"
-                    continue
-                end
-            end
-
-            binary_names_str = trim ${binary_names_str}
-            bin_list = split ${binary_names_str} " "
-
-            for target in ${target_list}
-                target = trim ${target}
-                if not is_empty ${target}
-                    target_dir = concat "target/" ${target}
-                    if equals ${release} "1"
-                        target_dir = concat ${target_dir} "/release"
-                    else
-                        target_dir = concat ${target_dir} "/debug"
-                    end
-
-                    for binary_name in ${bin_list}
-                        binary_name = trim ${binary_name}
-                        if not is_empty ${binary_name}
-                            src_binary = concat ${target_dir} "/" ${binary_name}
-                            if contains ${target} "windows"
-                                if not ends_with ${src_binary} ".exe"
-                                    src_binary = concat ${src_binary} ".exe"
-                                end
-                            end
-                            if is_path_exists ${src_binary}
-                                dist_target_dir = concat ${dist_dir} "/" ${target}
-                                mkdir ${dist_target_dir}
-                                dest_name = concat ${binary_name} "-" ${crate_version} "-" ${target}
-                                if contains ${target} "windows"
-                                    dest_name = concat ${dest_name} ".exe"
-                                end
-                                dest_path = concat ${dist_target_dir} "/" ${dest_name}
-                                echo concat "Copying " ${src_binary} " -> " ${dest_path}
-                                cp ${src_binary} ${dest_path}
-                            else
-                                echo concat "Warning: Binary not found at " ${src_binary}
-                            end
-                        end
-                    end
-                end
-            end
-        end
+    if equals ${member} "."
+        continue
     end
+
+    set_env MEMBER ${member}
+    msg = concat "Packaging member: " ${member}
+    echo ${msg}
+    exec --fail-on-error cargo make package_targets --disable-check-for-updates
 end
 '''

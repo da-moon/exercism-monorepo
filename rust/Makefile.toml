@@ -8,9 +8,9 @@ extend = [
   { path = "contrib/cargo-make/workspace/Makefile.toml" },
   { path = "contrib/cargo-make/targets/Makefile.toml" },
   { path = "contrib/cargo-make/validation/Makefile.toml" },
-  # { path = "contrib/cargo-make/packaging/Makefile.toml" },
-  # { path = "contrib/cargo-make/shortcuts/Makefile.toml" },
-  # { path = "contrib/cargo-make/cross/Makefile.toml" },
+  { path = "contrib/cargo-make/packaging/Makefile.toml" },
+  { path = "contrib/cargo-make/shortcuts/Makefile.toml" },
+  { path = "contrib/cargo-make/cross/Makefile.toml" },
 ]
 
 [config]
