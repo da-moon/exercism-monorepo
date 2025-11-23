@@ -1,0 +1,43 @@
+# Cargo Make entrypoint for the Exercism Rust collection.
+# Tasks are split into domain-specific files under contrib/cargo-make/ to keep them readable.
+
+extend = [
+  { path = "contrib/cargo-make/init/Makefile.toml" },
+  { path = "contrib/cargo-make/core/Makefile.toml" },
+  # { path = "contrib/cargo-make/crate/Makefile.toml" },
+  # { path = "contrib/cargo-make/workspace/Makefile.toml" },
+  # { path = "contrib/cargo-make/targets/Makefile.toml" },
+  # { path = "contrib/cargo-make/validation/Makefile.toml" },
+  # { path = "contrib/cargo-make/packaging/Makefile.toml" },
+  # { path = "contrib/cargo-make/shortcuts/Makefile.toml" },
+  # { path = "contrib/cargo-make/cross/Makefile.toml" },
+]
+
+[config]
+# Keep execution single-run; tasks themselves handle workspace fan-out.
+default_to_workspace = false
+skip_core_tasks = true
+# Avoid double-running init; tasks depend on it explicitly.
+init_task = "empty"
+
+[env]
+# Common arguments - can be overridden
+MESSAGE_FORMAT = { value = "--message-format=short", condition = { env_not_set = ["MESSAGE_FORMAT"] } }
+ALL_FEATURES   = { value = "--all-features",       condition = { env_not_set = ["ALL_FEATURES"] } }
+ALL_TARGETS    = { value = "--all-targets",         condition = { env_not_set = ["ALL_TARGETS"] } }
+FEATURES = { value = "", condition = { env_not_set = ["FEATURES"] } }
+
+# Build configuration
+RELEASE = { value = "0", condition = { env_not_set = ["RELEASE"] } }
+STRICT  = { value = "0", condition = { env_not_set = ["STRICT"] } }
+
+# Clippy settings
+CLIPPY_BASE_ARGS = { value = "-D warnings", condition = { env_not_set = ["CLIPPY_BASE_ARGS"] } }
+STRICT_CLIPPY_DENY = { value = "--deny warnings --deny clippy::pedantic --deny clippy::nursery", condition = { env_not_set = ["STRICT_CLIPPY_DENY"] } }
+STRICT_CLIPPY_ALLOW = { value = "--allow clippy::wildcard_imports --allow clippy::used_underscore_binding --allow clippy::missing_docs_in_private_items --allow clippy::missing_panics_doc --allow clippy::missing_errors_doc --allow clippy::missing_safety_doc --allow clippy::doc_markdown", condition = { env_not_set = ["STRICT_CLIPPY_ALLOW"] } }
+
+# Distribution settings
+DIST_DIR = { value = "dist", condition = { env_not_set = ["DIST_DIR"] } }
+
+# Workspace convenience flag
+WORKSPACE_FLAG = { value = "--workspace", condition = { env_not_set = ["WORKSPACE_FLAG"] } }

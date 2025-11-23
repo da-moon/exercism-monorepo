@@ -1,0 +1,601 @@
+#  ╭──────────────────────────────────────────────────────────╮
+#  │             Target Matrix (single crate)                 │
+#  ╰──────────────────────────────────────────────────────────╯
+
+[tasks.build_targets]
+description = "Build for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Building for target: ${target}"
+        args = array
+        array_push ${args} "build"
+        if not is_empty ${member}
+            array_push ${args} "-p"
+            array_push ${args} ${member}
+        end
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        cargo_args = get_env CARGO_BUILD_ARGS
+        if not is_empty ${cargo_args}
+            parts = split ${cargo_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        feature_args = get_env FEATURE_ARGS
+        if not is_empty ${feature_args}
+            parts = split ${feature_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        message_format = get_env MESSAGE_FORMAT
+        if not is_empty ${message_format}
+            parts = split ${message_format} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
+
+[tasks.check_targets]
+description = "Run cargo check for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Checking target: ${target}"
+        args = array
+        array_push ${args} "check"
+        if not is_empty ${member}
+            array_push ${args} "-p"
+            array_push ${args} ${member}
+        end
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        feature_args = get_env FEATURE_ARGS
+        if not is_empty ${feature_args}
+            parts = split ${feature_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        message_format = get_env MESSAGE_FORMAT
+        if not is_empty ${message_format}
+            parts = split ${message_format} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
+
+[tasks.clippy_targets]
+description = "Run clippy for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Running clippy for target: ${target}"
+        args = array
+        array_push ${args} "clippy"
+        if not is_empty ${member}
+            array_push ${args} "-p"
+            array_push ${args} ${member}
+        end
+        array_push ${args} "--target"
+        array_push ${args} ${target}
+
+        feature_args = get_env FEATURE_ARGS
+        if not is_empty ${feature_args}
+            parts = split ${feature_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        all_targets = get_env ALL_TARGETS
+        if not is_empty ${all_targets}
+            parts = split ${all_targets} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        message_format = get_env MESSAGE_FORMAT
+        if not is_empty ${message_format}
+            parts = split ${message_format} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        array_push ${args} "--"
+        clippy_args = get_env CLIPPY_ARGS
+        if not is_empty ${clippy_args}
+            parts = split ${clippy_args} " "
+            for p in ${parts}
+                p = trim ${p}
+                if not is_empty ${p}
+                    array_push ${args} ${p}
+                end
+            end
+        end
+
+        args_string = array_join ${args} " "
+        exec --fail-on-error cargo %{args_string}
+    end
+end
+'''
+
+[tasks.test_targets]
+description = "Run tests for all specified targets (skips if no runner available)"
+category = "Test"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+host_triple = get_env HOST_TRIPLE
+member = get_env MEMBER
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        needs_runner = not equals ${target} ${host_triple}
+        if ${needs_runner}
+            runner_env = concat "CARGO_TARGET_" ${target}
+            runner_env = replace ${runner_env} "-" "_"
+            runner_env = to_uppercase ${runner_env}
+            runner_env = concat ${runner_env} "_RUNNER"
+            runner = get_env ${runner_env}
+            if is_empty ${runner}
+                echo "Skipping tests for ${target}: no runner configured (set ${runner_env})"
+            else
+                echo "Testing target ${target} with runner: ${runner}"
+                args = array
+                array_push ${args} "test"
+                if not is_empty ${member}
+                    array_push ${args} "-p"
+                    array_push ${args} ${member}
+                end
+                array_push ${args} "--target"
+                array_push ${args} ${target}
+
+                feature_args = get_env FEATURE_ARGS
+                if not is_empty ${feature_args}
+                    parts = split ${feature_args} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                message_format = get_env MESSAGE_FORMAT
+                if not is_empty ${message_format}
+                    parts = split ${message_format} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                args_string = array_join ${args} " "
+                exec --fail-on-error cargo %{args_string}
+            end
+        else
+            echo "Testing target: ${target}"
+            args = array
+            array_push ${args} "test"
+            if not is_empty ${member}
+                array_push ${args} "-p"
+                array_push ${args} ${member}
+            end
+            array_push ${args} "--target"
+            array_push ${args} ${target}
+
+            feature_args = get_env FEATURE_ARGS
+            if not is_empty ${feature_args}
+                parts = split ${feature_args} " "
+                for p in ${parts}
+                    p = trim ${p}
+                    if not is_empty ${p}
+                        array_push ${args} ${p}
+                    end
+                end
+            end
+
+            message_format = get_env MESSAGE_FORMAT
+            if not is_empty ${message_format}
+                parts = split ${message_format} " "
+                for p in ${parts}
+                    p = trim ${p}
+                    if not is_empty ${p}
+                        array_push ${args} ${p}
+                    end
+                end
+            end
+
+            args_string = array_join ${args} " "
+            exec --fail-on-error cargo %{args_string}
+        end
+    end
+end
+'''
+
+#  ╭──────────────────────────────────────────────────────────╮
+#  │            Workspace Member×Target Matrix                │
+#  ╰──────────────────────────────────────────────────────────╯
+
+[tasks.build_all_members_targets]
+description = "Build all workspace members for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+
+handle = glob_array */Cargo.toml
+for path in ${handle}
+    member = dirname ${path}
+    if not equals ${member} "."
+        echo "=== Building member: ${member} ==="
+        for target in ${target_list}
+            target = trim ${target}
+            if not is_empty ${target}
+                args = array
+                array_push ${args} "build"
+                array_push ${args} "-p"
+                array_push ${args} ${member}
+                array_push ${args} "--target"
+                array_push ${args} ${target}
+
+                cargo_args = get_env CARGO_BUILD_ARGS
+                if not is_empty ${cargo_args}
+                    parts = split ${cargo_args} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                feature_args = get_env FEATURE_ARGS
+                if not is_empty ${feature_args}
+                    parts = split ${feature_args} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                message_format = get_env MESSAGE_FORMAT
+                if not is_empty ${message_format}
+                    parts = split ${message_format} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                echo "  Building for target: ${target}"
+                args_string = array_join ${args} " "
+                exec --fail-on-error cargo %{args_string}
+            end
+        end
+    end
+end
+'''
+
+[tasks.check_all_members_targets]
+description = "Run cargo check on all workspace members for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+
+handle = glob_array */Cargo.toml
+for path in ${handle}
+    member = dirname ${path}
+    if not equals ${member} "."
+        echo "=== Checking member: ${member} ==="
+        for target in ${target_list}
+            target = trim ${target}
+            if not is_empty ${target}
+                args = array
+                array_push ${args} "check"
+                array_push ${args} "-p"
+                array_push ${args} ${member}
+                array_push ${args} "--target"
+                array_push ${args} ${target}
+
+                feature_args = get_env FEATURE_ARGS
+                if not is_empty ${feature_args}
+                    parts = split ${feature_args} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                message_format = get_env MESSAGE_FORMAT
+                if not is_empty ${message_format}
+                    parts = split ${message_format} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                echo "  Checking target: ${target}"
+                args_string = array_join ${args} " "
+                exec --fail-on-error cargo %{args_string}
+            end
+        end
+    end
+end
+'''
+
+[tasks.clippy_all_members_targets]
+description = "Run clippy on all workspace members for all specified targets"
+category = "Build"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+
+handle = glob_array */Cargo.toml
+for path in ${handle}
+    member = dirname ${path}
+    if not equals ${member} "."
+        echo "=== Running clippy for member: ${member} ==="
+        for target in ${target_list}
+            target = trim ${target}
+            if not is_empty ${target}
+                args = array
+                array_push ${args} "clippy"
+                array_push ${args} "-p"
+                array_push ${args} ${member}
+                array_push ${args} "--target"
+                array_push ${args} ${target}
+
+                feature_args = get_env FEATURE_ARGS
+                if not is_empty ${feature_args}
+                    parts = split ${feature_args} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                all_targets = get_env ALL_TARGETS
+                if not is_empty ${all_targets}
+                    parts = split ${all_targets} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                message_format = get_env MESSAGE_FORMAT
+                if not is_empty ${message_format}
+                    parts = split ${message_format} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                array_push ${args} "--"
+                clippy_args = get_env CLIPPY_ARGS
+                if not is_empty ${clippy_args}
+                    parts = split ${clippy_args} " "
+                    for p in ${parts}
+                        p = trim ${p}
+                        if not is_empty ${p}
+                            array_push ${args} ${p}
+                        end
+                    end
+                end
+
+                echo "  Clippy for target: ${target}"
+                args_string = array_join ${args} " "
+                exec --fail-on-error cargo %{args_string}
+            end
+        end
+    end
+end
+'''
+
+[tasks.test_all_members_targets]
+description = "Run tests for all workspace members on all specified targets (skips if no runner)"
+category = "Test"
+dependencies = ["prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+host_triple = get_env HOST_TRIPLE
+
+handle = glob_array */Cargo.toml
+for path in ${handle}
+    member = dirname ${path}
+    if not equals ${member} "."
+        echo "=== Testing member: ${member} ==="
+        for target in ${target_list}
+            target = trim ${target}
+            if not is_empty ${target}
+                needs_runner = not equals ${target} ${host_triple}
+                if ${needs_runner}
+                    runner_env = concat "CARGO_TARGET_" ${target}
+                    runner_env = replace ${runner_env} "-" "_"
+                    runner_env = to_uppercase ${runner_env}
+                    runner_env = concat ${runner_env} "_RUNNER"
+                    runner = get_env ${runner_env}
+                    if is_empty ${runner}
+                        echo "  Skipping tests for ${target}: no runner configured (set ${runner_env})"
+                    else
+                        echo "  Testing target ${target} with runner: ${runner}"
+                        args = array
+                        array_push ${args} "test"
+                        array_push ${args} "-p"
+                        array_push ${args} ${member}
+                        array_push ${args} "--target"
+                        array_push ${args} ${target}
+
+                        feature_args = get_env FEATURE_ARGS
+                        if not is_empty ${feature_args}
+                            parts = split ${feature_args} " "
+                            for p in ${parts}
+                                p = trim ${p}
+                                if not is_empty ${p}
+                                    array_push ${args} ${p}
+                                end
+                            end
+                        end
+
+                        message_format = get_env MESSAGE_FORMAT
+                        if not is_empty ${message_format}
+                            parts = split ${message_format} " "
+                            for p in ${parts}
+                                p = trim ${p}
+                                if not is_empty ${p}
+                                    array_push ${args} ${p}
+                                end
+                            end
+                        end
+
+                        args_string = array_join ${args} " "
+                        exec --fail-on-error cargo %{args_string}
+                    end
+                else
+                    echo "  Testing target: ${target}"
+                    args = array
+                    array_push ${args} "test"
+                    array_push ${args} "-p"
+                    array_push ${args} ${member}
+                    array_push ${args} "--target"
+                    array_push ${args} ${target}
+
+                    feature_args = get_env FEATURE_ARGS
+                    if not is_empty ${feature_args}
+                        parts = split ${feature_args} " "
+                        for p in ${parts}
+                            p = trim ${p}
+                            if not is_empty ${p}
+                                array_push ${args} ${p}
+                            end
+                        end
+                    end
+
+                    message_format = get_env MESSAGE_FORMAT
+                    if not is_empty ${message_format}
+                        parts = split ${message_format} " "
+                        for p in ${parts}
+                            p = trim ${p}
+                            if not is_empty ${p}
+                                array_push ${args} ${p}
+                            end
+                        end
+                    end
+
+                    args_string = array_join ${args} " "
+                    exec --fail-on-error cargo %{args_string}
+                end
+            end
+        end
+    end
+end
+'''

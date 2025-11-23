@@ -26,7 +26,7 @@
 //                     ']' | ')' | '}' => {
 //                         if let Some(last) = state.0.pop(){
 //                             // in case brackets don't match
-//                             if 
+//                             if
 //                             ( last == '[' && curr != ']' ) ||
 //                             ( last == '{' && curr != '}' ) ||
 //                             ( last == '(' && curr != ')' )
@@ -57,17 +57,17 @@ pub fn brackets_are_balanced(string: &str) -> bool {
                     if stack.pop() != Some('{') {
                         return Err(());
                     }
-                }
+                },
                 ']' => {
                     if stack.pop() != Some('[') {
                         return Err(());
                     }
-                }
+                },
                 ')' => {
                     if stack.pop() != Some('(') {
                         return Err(());
                     }
-                }
+                },
                 _ => (),
             }
             Ok(stack)

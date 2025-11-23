@@ -20,7 +20,7 @@
 // }
 
 pub fn build_proverb(list: &Vec<&str>) -> String {
-    if list.is_empty(){
+    if list.is_empty() {
         return String::new();
     }
     // list
@@ -43,15 +43,15 @@ pub fn build_proverb(list: &Vec<&str>) -> String {
     //         Some(sentence)
     //     })
     //     .collect::<Vec<String>>();
-    
-    let mut res: Vec<String> =   list
+
+    let mut res: Vec<String> = list
         .windows(2)
         .map(|s| vec![s[0].to_string(), s[1].to_string()])
         .fold(Vec::new(), |cur: Vec<String>, nxt: Vec<String>| {
             let sentence: String = format!("For want of a {} the {} was lost.", nxt[0], nxt[1]);
             [cur, vec![sentence]].concat()
         });
-    let sentence: String = format!("And all for the want of a {}.",list[0]);
+    let sentence: String = format!("And all for the want of a {}.", list[0]);
     res.push(sentence);
     return res.join("\n");
 }

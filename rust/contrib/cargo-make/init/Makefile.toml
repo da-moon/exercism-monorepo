@@ -1,0 +1,218 @@
+#  ╭──────────────────────────────────────────────────────────╮
+#  │                    Initialization                        │
+#  ╰──────────────────────────────────────────────────────────╯
+
+[tasks.init]
+description = "Initialize environment variables and normalize paths"
+category = "Build"
+dependencies = [
+  "init_host",
+  "init_targets",
+  "init_exe_suffix",
+  "init_paths",
+  "init_features",
+  "init_clippy",
+  "init_distdir",
+  "init_summary"
+]
+script_runner = "@duckscript"
+script = '''
+# Mark init done after sub-steps complete
+set_env CARGO_MAKE_INIT_DONE 1
+'''
+
+[tasks.init_host]
+description = "Detect and set HOST_TRIPLE, HOST_OS, HOST_ARCH (first run only)"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+already = get_env CARGO_MAKE_INIT_DONE
+if equals ${already} 1
+    # Already initialized, skip heavy detection
+    exit 0
+end
+
+# Try to parse host triple from rustc -vV output
+res = exec rustc --version --verbose
+out = set ${res.stdout}
+lines = split ${out} "\n"
+host_triple = set
+host_prefix = set "host: "
+parsed = set 0
+for line in ${lines}
+    t = trim ${line}
+    if starts_with ${t} ${host_prefix}
+        host_triple = replace ${t} ${host_prefix} ""
+        host_triple = trim ${host_triple}
+        parsed = set 1
+    end
+end
+
+if is_empty ${host_triple}
+    host_triple = set x86_64-unknown-linux-gnu
+end
+set_env HOST_TRIPLE ${host_triple}
+set_env CARGO_MAKE_HOST_DETECTED ${parsed}
+
+# Derive host OS and ARCH from triple
+arch = set unknown
+os = set unknown
+
+if starts_with ${host_triple} x86_64
+    arch = set x86_64
+elif starts_with ${host_triple} aarch64
+    arch = set aarch64
+elif starts_with ${host_triple} armv7
+    arch = set armv7
+elif starts_with ${host_triple} i686
+    arch = set i686
+elif starts_with ${host_triple} riscv64
+    arch = set riscv64
+end
+
+if contains ${host_triple} windows
+    os = set windows
+elif contains ${host_triple} darwin
+    os = set macos
+elif contains ${host_triple} apple
+    os = set macos
+elif contains ${host_triple} linux
+    os = set linux
+elif contains ${host_triple} freebsd
+    os = set freebsd
+end
+
+set_env HOST_ARCH ${arch}
+set_env HOST_OS ${os}
+'''
+
+[tasks.init_targets]
+description = "Set TARGETS (defaults to HOST_TRIPLE)"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+targets = get_env TARGETS
+if is_empty ${targets}
+    ht = get_env HOST_TRIPLE
+    if is_empty ${ht}
+        ht = set x86_64-unknown-linux-gnu
+    end
+    set_env TARGETS ${ht}
+end
+'''
+
+[tasks.init_exe_suffix]
+description = "Set EXE_SUFFIX based on HOST_TRIPLE"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+ht = get_env HOST_TRIPLE
+exe_suffix = set
+if contains ${ht} windows
+    exe_suffix = set .exe
+end
+set_env EXE_SUFFIX ${exe_suffix}
+'''
+
+[tasks.init_paths]
+description = "Set BIN_DIR and CARGO_BUILD_ARGS based on RELEASE"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+release = get_env RELEASE
+if equals ${release} 1
+    set_env BIN_DIR target/release
+    set_env CARGO_BUILD_ARGS --release
+else
+    set_env BIN_DIR target/debug
+    empty = set
+    set_env CARGO_BUILD_ARGS ${empty}
+end
+'''
+
+[tasks.init_features]
+description = "Resolve FEATURE_ARGS from FEATURES/ALL_FEATURES"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+features = get_env FEATURES
+all_features = get_env ALL_FEATURES
+feature_args = set
+
+if not is_empty ${features}
+    features_flag = set --features
+    feature_args = concat ${features_flag} " " ${features}
+elif not is_empty ${all_features}
+    feature_args = set ${all_features}
+end
+set_env FEATURE_ARGS ${feature_args}
+'''
+
+[tasks.init_clippy]
+description = "Resolve CLIPPY_ARGS from STRICT and base settings"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+strict = get_env STRICT
+if equals ${strict} 1
+    strict_deny = get_env STRICT_CLIPPY_DENY
+    strict_allow = get_env STRICT_CLIPPY_ALLOW
+    clippy_args = concat ${strict_deny} " " ${strict_allow}
+    set_env CLIPPY_ARGS ${clippy_args}
+else
+    clippy_base = get_env CLIPPY_BASE_ARGS
+    set_env CLIPPY_ARGS ${clippy_base}
+end
+'''
+
+[tasks.init_distdir]
+description = "Ensure DIST_DIR exists"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+dist_dir = get_env DIST_DIR
+if is_empty ${dist_dir}
+    dist_dir = set dist
+end
+mkdir ${dist_dir}
+'''
+
+[tasks.init_summary]
+description = "Print concise summary (first run only)"
+category = "Build"
+script_runner = "@duckscript"
+script = '''
+
+already = get_env CARGO_MAKE_INIT_DONE
+if not equals ${already} 1
+    host_triple = get_env HOST_TRIPLE
+    os = get_env HOST_OS
+    arch = get_env HOST_ARCH
+    targets_now = get_env TARGETS
+    release_now = get_env RELEASE
+    strict_now = get_env STRICT
+    detected_now = get_env CARGO_MAKE_HOST_DETECTED
+    summary = concat "Init: host=" ${host_triple}
+    summary = concat ${summary} " os="
+    summary = concat ${summary} ${os}
+    summary = concat ${summary} " arch="
+    summary = concat ${summary} ${arch}
+    summary = concat ${summary} " targets="
+    summary = concat ${summary} ${targets_now}
+    summary = concat ${summary} " release="
+    summary = concat ${summary} ${release_now}
+    summary = concat ${summary} " strict="
+    summary = concat ${summary} ${strict_now}
+    summary = concat ${summary} " detected="
+    summary = concat ${summary} ${detected_now}
+    echo ${summary}
+end
+'''
+

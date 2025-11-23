@@ -1,0 +1,31 @@
+[tasks.validate]
+description = "Run validation sequence: format, build, test, clippy"
+category = "CI"
+dependencies = ["format", "build", "test", "clippy"]
+
+[tasks.validate_targets]
+description = "Run validation for all targets: format, build, test, clippy"
+category = "CI"
+dependencies = ["format", "build_targets", "test_targets", "clippy_targets"]
+
+[tasks.validate_strict]
+description = "Run validation with strict clippy settings"
+category = "CI"
+env = { "STRICT" = "1" }
+dependencies = ["format", "build", "test", "clippy"]
+
+[tasks.validate_all]
+description = "Run validation sequence for all workspace members"
+category = "CI"
+dependencies = ["format_all", "build_all", "test_all", "clippy_all"]
+
+[tasks.validate_all_targets]
+description = "Run validation for all members and targets"
+category = "CI"
+dependencies = ["format_all", "build_all_members_targets", "test_all_members_targets", "clippy_all_members_targets"]
+
+[tasks.validate_all_strict]
+description = "Run validation for all members with strict clippy"
+category = "CI"
+env = { "STRICT" = "1" }
+dependencies = ["format_all", "build_all", "test_all", "clippy_all"]

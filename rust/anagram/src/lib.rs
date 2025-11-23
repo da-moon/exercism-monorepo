@@ -16,7 +16,7 @@ pub fn anagrams_for<'a>(word: &str, possible_anagrams: &[&'a str]) -> HashSet<&'
     // XXX: why is borrow checkout complaining ?
     // let word = word.to_string().to_lowercase().as_str();
     // XXX: Why borrow checker is not complaining here 
-    let word : &str = &str::to_lowercase(word.clone());
+    let word : &str = &str::to_lowercase(word);
     let possible_anagrams  : Vec<&str> = possible_anagrams.to_owned();
     let mut possible_anagrams : Vec<String> = possible_anagrams // alternative way of creating a vector of owned strings
         .to_owned()  // derefrences pointer to the string slice and forms a Vec<&str>

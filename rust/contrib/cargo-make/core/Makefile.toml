@@ -1,0 +1,31 @@
+# Target prep shared by crate/workspace/cross tasks.
+
+[config]
+skip_core_tasks = true
+
+[tasks.prepare_targets]
+description = "Ensure all specified targets are installed via rustup"
+category = "Build"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+
+echo "Preparing targets: ${targets}"
+
+installed = exec rustup target list --installed
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        if not contains ${installed} ${target}
+            echo "Installing target: ${target}"
+            exec --fail-on-error rustup target add ${target}
+        else
+            echo "Target already installed: ${target}"
+        end
+    end
+end
+'''

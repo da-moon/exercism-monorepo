@@ -1,14 +1,18 @@
 pub fn find() -> Option<u32> {
-    let sum_result = 1000 ;
+    let sum_result = 1000;
     let result = (1..sum_result)
-        .flat_map(|a| (1..=(sum_result - a))
-        .map(move |b| (a, b) ))
-        .flat_map(move|a_and_b| (1..=(sum_result - (a_and_b.0+a_and_b.1)))
-        .map(move|c| (a_and_b.0,a_and_b.1, c) ))
-        .filter(move |&(a, b, c)| ((a, b, c).0 + (a, b, c).1  + (a, b, c).2 == sum_result ) && ((a, b, c).0 * (a, b, c).0 + (a, b, c).1 * (a, b, c).1 == (a, b, c).2 * (a, b, c).2) )
-        .map(|(a, b, c)|(a, b, c).0 *(a, b, c).1*(a, b, c).2 )
+        .flat_map(|a| (1..=(sum_result - a)).map(move |b| (a, b)))
+        .flat_map(move |a_and_b| {
+            (1..=(sum_result - (a_and_b.0 + a_and_b.1))).map(move |c| (a_and_b.0, a_and_b.1, c))
+        })
+        .filter(move |&(a, b, c)| {
+            ((a, b, c).0 + (a, b, c).1 + (a, b, c).2 == sum_result)
+                && ((a, b, c).0 * (a, b, c).0 + (a, b, c).1 * (a, b, c).1
+                    == (a, b, c).2 * (a, b, c).2)
+        })
+        .map(|(a, b, c)| (a, b, c).0 * (a, b, c).1 * (a, b, c).2)
         .nth(0);
-        println!("{:?}",result );
+    println!("{:?}", result);
     result
 }
 

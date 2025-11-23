@@ -3,12 +3,12 @@ pub fn is_armstrong_number(num: u32) -> bool {
         return true;
     }
     let num_str = num.to_string();
-    let exp : u32 = num_str.len() as u32;
-    let mut sum : u32 = 0 ;
+    let exp: u32 = num_str.len() as u32;
+    let mut sum: u32 = 0;
     for c in num_str.chars() {
         if let Some(n) = c.to_digit(10) {
             if let Some(val) = sum.checked_add(n.pow(exp)) {
-                sum = val ;
+                sum = val;
             }
         }
     }
@@ -25,5 +25,4 @@ pub fn is_armstrong_number(num: u32) -> bool {
     //     sum += quotient.pow(exp);
     // } ;
     // sum == num
-
 }

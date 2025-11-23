@@ -1,0 +1,24 @@
+[workspace]
+members = [
+  "anagram",
+  "armstrong-numbers",
+  "beer-song",
+  "bob",
+  "clock",
+  "difference-of-squares",
+  "gigasecond",
+  "grains",
+  "hello-world",
+  "leap",
+  "matching-brackets",
+  "nth-prime",
+  "prime-factors",
+  "proverb",
+  "pythagorean-triplet",
+  "raindrops",
+  "reverse-string",
+  "saddle-points",
+  "series",
+  "sum-of-multiples",
+]
+resolver = "2"

@@ -1,0 +1,289 @@
+[tasks.run]
+description = "Run the binary (single-crate convenience)"
+category = "Development"
+dependencies = ["init"]
+condition = { files_exist = ["src/main.rs"] }
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "run"
+
+cargo_args = get_env CARGO_BUILD_ARGS
+if not is_empty ${cargo_args}
+    parts = split ${cargo_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.build]
+description = "Build current crate for host target"
+category = "Build"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "build"
+
+cargo_args = get_env CARGO_BUILD_ARGS
+if not is_empty ${cargo_args}
+    parts = split ${cargo_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+message_format = get_env MESSAGE_FORMAT
+if not is_empty ${message_format}
+    parts = split ${message_format} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.test]
+description = "Run tests for current crate (host target)"
+category = "Test"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "test"
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+message_format = get_env MESSAGE_FORMAT
+if not is_empty ${message_format}
+    parts = split ${message_format} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.check]
+description = "Run cargo check for current crate"
+category = "Build"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "check"
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+message_format = get_env MESSAGE_FORMAT
+if not is_empty ${message_format}
+    parts = split ${message_format} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.clippy]
+description = "Run clippy for current crate"
+category = "Build"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "clippy"
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+all_targets = get_env ALL_TARGETS
+if not is_empty ${all_targets}
+    parts = split ${all_targets} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+message_format = get_env MESSAGE_FORMAT
+if not is_empty ${message_format}
+    parts = split ${message_format} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+array_push ${args} "--"
+clippy_args = get_env CLIPPY_ARGS
+if not is_empty ${clippy_args}
+    parts = split ${clippy_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.format]
+description = "Check formatting for current crate"
+category = "Development"
+command = "cargo"
+args = ["fmt", "--", "--check"]
+
+[tasks.format_fix]
+description = "Fix formatting for current crate"
+category = "Development"
+command = "cargo"
+args = ["fmt"]
+
+[tasks.fix]
+description = "Run cargo fix for current crate"
+category = "Development"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "fix"
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+message_format = get_env MESSAGE_FORMAT
+if not is_empty ${message_format}
+    parts = split ${message_format} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+array_push ${args} "--allow-dirty"
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+[tasks.clean]
+description = "Clean build artifacts for the current crate"
+category = "Build"
+command = "cargo"
+args = ["clean"]
+
+[tasks.doc]
+description = "Generate documentation (no dependencies) for the current crate"
+category = "Documentation"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "doc"
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+array_push ${args} "--no-deps"
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''

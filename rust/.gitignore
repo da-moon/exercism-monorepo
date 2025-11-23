@@ -115,6 +115,7 @@
 !/todo.md
 !/AGENTS.md
 !/flake.nix
+!/flake.lock
 #  ────────────────────────────────────────────────────────────────────
 # Data and fixtures (if needed)
 !/data/

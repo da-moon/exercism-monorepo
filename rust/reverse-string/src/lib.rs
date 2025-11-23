@@ -1,5 +1,5 @@
 pub fn reverse(input: &str) -> String {
-    let mut result : String = String::new();
+    let mut result: String = String::new();
     for c in input.chars().rev() {
         result.push(c)
     }
