@@ -9,7 +9,7 @@ pub fn find() -> Option<u32> {
           if i+j <= additionResult{
               let mut k : Option<u32> = additionResult.checked_sub(i+j);
               if k.is_none(){
-                  panic!("shit happened")
+                  panic!("K is None")
               }
               let temp = k.unwrap();
               if (i*i)+(j*j)==( temp* temp) && i+j+ temp == additionResult {
