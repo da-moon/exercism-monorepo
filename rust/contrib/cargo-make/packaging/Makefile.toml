@@ -2,6 +2,7 @@
 description = "Package selected member binaries for all targets into dist/<triple>/"
 category = "Build"
 condition = { env_set = ["MEMBER"] }
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -158,6 +159,7 @@ end
 description = "Package all workspace member binaries for all targets"
 category = "Build"
 dependencies = ["init", "build_all_members_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 

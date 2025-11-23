@@ -11,7 +11,6 @@ dependencies = [
   "init_exe_suffix",
   "init_paths",
   "init_features",
-  "init_clippy",
   "init_distdir",
   "init_summary"
 ]
@@ -153,24 +152,6 @@ end
 set_env FEATURE_ARGS ${feature_args}
 '''
 
-[tasks.init_clippy]
-description = "Resolve CLIPPY_ARGS from STRICT and base settings"
-category = "Build"
-script_runner = "@duckscript"
-script = '''
-
-strict = get_env STRICT
-if equals ${strict} 1
-    strict_deny = get_env STRICT_CLIPPY_DENY
-    strict_allow = get_env STRICT_CLIPPY_ALLOW
-    clippy_args = concat ${strict_deny} " " ${strict_allow}
-    set_env CLIPPY_ARGS ${clippy_args}
-else
-    clippy_base = get_env CLIPPY_BASE_ARGS
-    set_env CLIPPY_ARGS ${clippy_base}
-end
-'''
-
 [tasks.init_distdir]
 description = "Ensure DIST_DIR exists"
 category = "Build"
@@ -215,4 +196,3 @@ if not equals ${already} 1
     echo ${summary}
 end
 '''
-

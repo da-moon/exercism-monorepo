@@ -6,6 +6,7 @@
 description = "Build for all specified targets"
 category = "Build"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -69,6 +70,7 @@ end
 description = "Run cargo check for all specified targets"
 category = "Build"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -121,6 +123,7 @@ end
 description = "Run clippy for all specified targets"
 category = "Build"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -196,6 +199,7 @@ end
 description = "Run tests for all specified targets (skips if no runner available)"
 category = "Test"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -300,6 +304,7 @@ end
 description = "Build all workspace members for all specified targets"
 category = "Build"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -367,6 +372,7 @@ end
 description = "Run cargo check on all workspace members for all specified targets"
 category = "Build"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -423,6 +429,7 @@ end
 description = "Run clippy on all workspace members for all specified targets"
 category = "Build"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
@@ -502,6 +509,7 @@ end
 description = "Run tests for all workspace members on all specified targets (skips if no runner)"
 category = "Test"
 dependencies = ["prepare_targets"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 

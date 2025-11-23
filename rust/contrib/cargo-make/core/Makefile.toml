@@ -7,6 +7,7 @@ skip_core_tasks = true
 description = "Ensure all specified targets are installed via rustup"
 category = "Build"
 dependencies = ["init"]
+script_runner = "@duckscript"
 script = '''
 #!@duckscript
 
