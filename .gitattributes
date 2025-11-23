@@ -1,0 +1,60 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Rust files
+*.rs text eol=lf linguist-language=Rust
+*.toml text eol=lf
+
+# Documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# Scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Configuration files
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+*.xml text eol=lf
+
+# Git files
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.gitmodules text eol=lf
+
+# License files
+LICENSE* text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Cargo.lock should be treated as binary to avoid merge conflicts
+# Cargo.lock binary
+
+# Mark vendored files
+target/* linguist-vendored
+vendor/* linguist-vendored
+third-party/* linguist-vendored
+
+# Mark generated files
+*.generated.rs linguist-generated
+*_gen.rs linguist-generated
+
+# Ensure Rust files are properly detected
+*.rs linguist-detectable=true
+Cargo.toml linguist-detectable=true
+
+# Documentation files
+*.md linguist-documentation
+docs/* linguist-documentation

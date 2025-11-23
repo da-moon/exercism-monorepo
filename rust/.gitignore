@@ -1,0 +1,125 @@
+*
+#  ────────────────────────────────────────────────────────────────────
+# Rust source files
+!/sdk
+!/sdk/src/
+!/sdk/src/**/
+!/sdk/tests/
+!/sdk/tests/**/
+!/sdk/**/*.rs
+!/api
+!/api/src/
+!/api/src/**/
+!/api/tests/
+!/api/tests/**/
+!/api/**/*.rs
+!/cmd
+!/cmd/src/
+!/cmd/src/**/
+!/cmd/tests/
+!/cmd/tests/**/
+!/cmd/**/*.rs
+
+#  ────────────────────────────────────────────────────────────────────
+# Cargo configuration
+!/Cargo.toml
+!/Cargo.lock
+!/sdk/Cargo.toml
+!/api/Cargo.toml
+!/cmd/Cargo.toml
+
+!/Makefile*.toml
+
+#  ────────────────────────────────────────────────────────────────────
+# Documentation
+!/**/*.md
+!/docs/
+!/docs/**
+
+#  ────────────────────────────────────────────────────────────────────
+# Scripts and utilities
+!/scripts/
+!/scripts/**
+!/contrib/
+!/contrib/**
+
+#  ────────────────────────────────────────────────────────────────────
+# Tests and examples
+!/tests/
+!/tests/**
+!/examples/
+!/examples/**
+!/benches/
+!/benches/**
+
+#  ────────────────────────────────────────────────────────────────────
+# Configuration files
+!/**/.gitkeep
+!/**/.gitignore
+!/.editorconfig
+!/.gitignore
+!/.gitattributes
+!/.gitlint
+!/.markdownlint.yaml
+!/.markdownlintignore
+!/.yamlfmt
+!/rustfmt.toml
+!/clippy.toml
+!/rust-toolchain.toml
+!/deny.toml
+
+#  ────────────────────────────────────────────────────────────────────
+# CI/CD
+!/.github/
+!/.github/CODEOWNERS
+!/.github/dependabot.yml
+!/.github/pull_request_template.md
+!/.github/ISSUE_TEMPLATE/
+!/.github/ISSUE_TEMPLATE/*.md
+!/.github/ISSUE_TEMPLATE/*.yml
+!/.github/workflows/
+!/.github/workflows/*.yml
+!/.gitlab-ci.yml
+
+#  ────────────────────────────────────────────────────────────────────
+# IDE and editor configurations
+!/.vscode/
+!/.vscode/**
+!/.idea/
+!/.idea/**
+
+#  ────────────────────────────────────────────────────────────────────
+# Build and deployment
+!/Dockerfile
+!/.dockerignore
+!/docker-compose.yml
+!/docker-compose.yaml
+!/fly.toml
+!/Shuttle.toml
+!/shuttle.toml
+
+#  ────────────────────────────────────────────────────────────────────
+# Root documentation files
+!/LICENSE
+!/LICENSE-MIT
+!/LICENSE-APACHE
+!/README.md
+!/CHANGELOG.md
+!/CONTRIBUTING.md
+!/CONTRIBUTORS.md
+!/RELEASE_NOTES.md
+!/SECURITY.md
+!/CODE_OF_CONDUCT.md
+!/AUTHORS
+!/MAINTAINERS
+!/todo.md
+!/AGENTS.md
+!/flake.nix
+#  ────────────────────────────────────────────────────────────────────
+# Data and fixtures (if needed)
+!/data/
+!/data/**/.gitkeep
+!/fixtures/
+!/fixtures/**
+!/assets/
+!/assets/**

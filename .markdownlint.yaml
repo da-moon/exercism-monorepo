@@ -1,0 +1,62 @@
+---
+# Markdownlint configuration for SBOM Graph Analyzer
+# https://github.com/DavidAnson/markdownlint/blob/main/schema/.markdownlint.yaml
+
+# Default state for all rules
+default: true
+
+# MD003/heading-style/header-style - Heading style
+MD003:
+  # Heading style
+  style: "consistent"
+
+# MD004/ul-style - Unordered list style
+MD004:
+  # List style
+  style: "dash"
+
+# MD007/ul-indent - Unordered list indentation
+MD007:
+  # Spaces for indent
+  indent: 2
+
+# MD013/line-length - Line length
+MD013:
+  # Number of characters
+  line_length: 80
+  # Include code blocks
+  code_blocks: false
+  # Include tables
+  tables: false
+  # Include headings
+  headings: true
+  # Include headings
+  headers: true
+  # Strict length checking
+  strict: false
+  # Stern length checking
+  stern: false
+
+# MD024/no-duplicate-heading/no-duplicate-header - Multiple headings with the same content
+MD024:
+  # Only check sibling headings
+  siblings_only: true
+
+# MD025/single-title/single-h1 - Multiple top-level headings in the same document
+MD025:
+  # Heading level
+  level: 1
+  # RegExp for matching title in front matter
+  front_matter_title: "^\\s*title\\s*[:=]"
+
+# MD033/no-inline-html - Inline HTML
+MD033:
+  # Allowed elements
+  allowed_elements: []
+
+# MD041/first-line-heading/first-line-h1 - First line in a file should be a top-level heading
+MD041:
+  # Heading level
+  level: 1
+  # RegExp for matching title in front matter
+  front_matter_title: "^\\s*title\\s*[:=]"

@@ -1,0 +1,25 @@
+# yamlfmt configuration for SBOM Graph Analyzer
+# vim: filetype=yaml syntax=yaml softtabstop=2 tabstop=2 shiftwidth=2 fileencoding=utf-8 expandtab autoindent smartindent
+# code: language=yaml insertSpaces=true tabSize=2
+
+formatter:
+  type: basic
+  include_document_start: true
+  retain_line_breaks: false
+  max_line_length: 80
+  scan_folded_as_literal: false
+  indentless_arrays: false
+  drop_merge_tag: false
+  pad_line_comments: 1
+
+# Line break settings
+line_ending: lf
+
+# Indentation
+indent: 2
+
+# Preserve quotes
+preserve_quotes: false
+
+# Document analysis
+continue_on_error: false

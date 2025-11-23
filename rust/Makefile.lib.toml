@@ -1,0 +1,384 @@
+[config]
+default_to_workspace = false
+skip_core_tasks = true
+
+[env]
+# Enable workspace makefile extension
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
+# Common arguments - can be overridden
+MESSAGE_FORMAT = { value = "--message-format=short", condition = { env_not_set = ["MESSAGE_FORMAT"] } }
+ALL_FEATURES = { value = "--all-features", condition = { env_not_set = ["ALL_FEATURES"] } }
+ALL_TARGETS = { value = "--all-targets", condition = { env_not_set = ["ALL_TARGETS"] } }
+
+# Feature handling
+FEATURES = { value = "", condition = { env_not_set = ["FEATURES"] } }
+
+# Build configuration
+RELEASE = { value = "0", condition = { env_not_set = ["RELEASE"] } }
+STRICT = { value = "0", condition = { env_not_set = ["STRICT"] } }
+
+# Clippy configurations - single source of truth
+CLIPPY_BASE_ARGS = "-D warnings"
+STRICT_CLIPPY_DENY = "--deny warnings --deny clippy::pedantic --deny clippy::nursery"
+STRICT_CLIPPY_ALLOW = "--allow clippy::wildcard_imports --allow clippy::used_underscore_binding --allow clippy::missing_docs_in_private_items --allow clippy::missing_panics_doc --allow clippy::missing_errors_doc --allow clippy::missing_safety_doc --allow clippy::doc_markdown"
+
+#  ╭──────────────────────────────────────────────────────────╮
+#  │                    Initialization                        │
+#  ╰──────────────────────────────────────────────────────────╯
+
+[tasks.init]
+extend = "Makefile.toml"
+
+#  ╭──────────────────────────────────────────────────────────╮
+#  │                  Target Preparation                      │
+#  ╰──────────────────────────────────────────────────────────╯
+
+[tasks.prepare_targets]
+extend = "Makefile.toml"
+
+#  ╭──────────────────────────────────────────────────────────╮
+#  │                  Library Example Tasks                   │
+#  ╰──────────────────────────────────────────────────────────╯
+
+[tasks.list_examples]
+description = "List all available examples"
+category = "Examples"
+script = '''
+#!@duckscript
+
+echo "Available examples:"
+
+# Check if examples directory exists
+if is_path_exists "examples"
+    # List all .rs files in examples directory
+    handle = glob_array examples/*.rs
+    
+    if is_empty ${handle}
+        echo "  No examples found in examples/ directory"
+    else
+        for example_path in ${handle}
+            # Extract filename without extension
+            filename = basename ${example_path}
+            parts = split ${filename} "."
+            example_name = array_get ${parts} 0
+            
+            echo "  - ${example_name}"
+        end
+    end
+else
+    echo "  No examples/ directory found"
+end
+
+# Also check for examples in Cargo.toml
+if is_path_exists "Cargo.toml"
+    cargo_content = readfile Cargo.toml
+    if contains ${cargo_content} "[[example]]"
+        echo ""
+        echo "Additional examples defined in Cargo.toml:"
+        
+        lines = split ${cargo_content} \n
+        # Use empty string as false, non-empty as true to avoid truthy string bug
+        in_example = ""
+        for line in ${lines}
+            trimmed_line = trim ${line}
+            if equals ${trimmed_line} "[[example]]"
+                in_example = "true"
+            elif not is_empty ${in_example}
+                # Check for sections to reset in_example
+                if starts_with ${trimmed_line} "[["
+                    # If we hit another section and haven't found name yet, reset
+                    if not equals ${trimmed_line} "[[example]]"
+                        in_example = ""
+                    end
+                elif starts_with ${trimmed_line} "["
+                    # Reset on any single bracket section
+                    in_example = ""
+                else
+                    # Remove all whitespace around = for consistent parsing
+                    normalized_line = replace ${trimmed_line} " " ""
+                    
+                    if starts_with ${normalized_line} "name="
+                        # Handle both quoted and unquoted values
+                        parts = split ${trimmed_line} "\""
+                        if greater_than ${parts.length} 1
+                            example_name = array_get ${parts} 1
+                            echo "  - ${example_name}"
+                            in_example = ""
+                        else
+                            # Try splitting by = for unquoted values
+                            parts = split ${trimmed_line} "="
+                            if greater_than ${parts.length} 1
+                                value = array_get ${parts} 1
+                                # Trim whitespace and quotes
+                                example_name = trim ${value}
+                                example_name = replace ${example_name} "\"" ""
+                                echo "  - ${example_name}"
+                                in_example = ""
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+'''
+
+[tasks.run_example]
+description = "Run a specific example (use with EXAMPLE=<name>)"
+category = "Examples"
+dependencies = ["init"]
+condition = { env_set = ["EXAMPLE"] }
+script = '''
+#!@duckscript
+
+example = get_env EXAMPLE
+cargo_args = get_env CARGO_BUILD_ARGS
+feature_args = get_env FEATURE_ARGS
+
+echo "Running example: ${example}"
+
+# Check if example exists
+example_path = concat "examples/" ${example} ".rs"
+if is_path_exists ${example_path}
+    exec --fail-on-error cargo run --example ${example} ${cargo_args} ${feature_args}
+else
+    # Maybe it's defined in Cargo.toml
+    exec --fail-on-error cargo run --example ${example} ${cargo_args} ${feature_args}
+end
+'''
+
+[tasks.build_examples]
+description = "Build all examples for host target"
+category = "Examples"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+
+cargo_args = get_env CARGO_BUILD_ARGS
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+
+echo "Building all examples for host target..."
+
+# Build all examples
+exec --fail-on-error cargo build --examples ${cargo_args} ${feature_args} ${message_format}
+'''
+
+[tasks.build_examples_targets]
+description = "Build all examples for all specified targets"
+category = "Examples"
+dependencies = ["init", "prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+cargo_args = get_env CARGO_BUILD_ARGS
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+
+echo "Building examples for all targets..."
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Building examples for target: ${target}"
+        exec --fail-on-error cargo build --examples --target ${target} ${cargo_args} ${feature_args} ${message_format}
+    end
+end
+'''
+
+[tasks.test_examples]
+description = "Test all examples for host target"
+category = "Examples"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+
+echo "Testing all examples for host target..."
+
+# First, get list of examples
+examples = array
+
+if is_path_exists "examples"
+    handle = glob_array examples/*.rs
+    for example_path in ${handle}
+        filename = basename ${example_path}
+        parts = split ${filename} "."
+        example_name = array_get ${parts} 0
+        array_push ${examples} ${example_name}
+    end
+end
+
+# Test each example
+if is_empty ${examples}
+    echo "No examples found to test"
+else
+    for example in ${examples}
+        echo "Testing example: ${example}"
+        exec --fail-on-error cargo test --example ${example} ${feature_args} ${message_format}
+    end
+end
+'''
+
+[tasks.test_examples_targets]
+description = "Test all examples for all specified targets (skips if no runner)"
+category = "Examples"
+dependencies = ["init", "prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+host_triple = get_env HOST_TRIPLE
+
+# First, get list of examples
+examples = array
+
+if is_path_exists "examples"
+    handle = glob_array examples/*.rs
+    for example_path in ${handle}
+        filename = basename ${example_path}
+        parts = split ${filename} "."
+        example_name = array_get ${parts} 0
+        array_push ${examples} ${example_name}
+    end
+end
+
+if is_empty ${examples}
+    echo "No examples found to test"
+else
+    for target in ${target_list}
+        target = trim ${target}
+        if not is_empty ${target}
+            echo "=== Testing examples for target: ${target} ==="
+            
+            # Check if we need a runner for cross-compilation
+            needs_runner = not equals ${target} ${host_triple}
+            
+            if ${needs_runner}
+                # Check if runner is configured
+                runner_env = concat "CARGO_TARGET_" ${target}
+                runner_env = replace ${runner_env} "-" "_"
+                runner_env = to_uppercase ${runner_env}
+                runner_env = concat ${runner_env} "_RUNNER"
+                
+                runner = get_env ${runner_env}
+                if is_empty ${runner}
+                    echo "  Skipping example tests for ${target}: no runner configured (set ${runner_env})"
+                else
+                    echo "  Testing examples for ${target} with runner: ${runner}"
+                    for example in ${examples}
+                        echo "  Testing example: ${example}"
+                        exec --fail-on-error cargo test --example ${example} --target ${target} ${feature_args} ${message_format}
+                    end
+                end
+            else
+                for example in ${examples}
+                    echo "  Testing example: ${example}"
+                    exec --fail-on-error cargo test --example ${example} --target ${target} ${feature_args} ${message_format}
+                end
+            end
+        end
+    end
+end
+'''
+
+[tasks.check_examples]
+description = "Run cargo check on all examples for host target"
+category = "Examples"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+
+echo "Checking all examples..."
+exec --fail-on-error cargo check --examples ${feature_args} ${message_format}
+'''
+
+[tasks.check_examples_targets]
+description = "Run cargo check on all examples for all specified targets"
+category = "Examples"
+dependencies = ["init", "prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Checking examples for target: ${target}"
+        exec --fail-on-error cargo check --examples --target ${target} ${feature_args} ${message_format}
+    end
+end
+'''
+
+[tasks.clippy_examples]
+description = "Run clippy on all examples for host target"
+category = "Examples"
+dependencies = ["init"]
+script = '''
+#!@duckscript
+
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+clippy_args = get_env CLIPPY_ARGS
+
+echo "Running clippy on all examples..."
+exec --fail-on-error cargo clippy --examples ${feature_args} ${message_format} -- ${clippy_args}
+'''
+
+[tasks.clippy_examples_targets]
+description = "Run clippy on all examples for all specified targets"
+category = "Examples"
+dependencies = ["init", "prepare_targets"]
+script = '''
+#!@duckscript
+
+targets = get_env TARGETS
+target_list = split ${targets} " "
+feature_args = get_env FEATURE_ARGS
+message_format = get_env MESSAGE_FORMAT
+clippy_args = get_env CLIPPY_ARGS
+
+for target in ${target_list}
+    target = trim ${target}
+    if not is_empty ${target}
+        echo "Running clippy on examples for target: ${target}"
+        exec --fail-on-error cargo clippy --examples --target ${target} ${feature_args} ${message_format} -- ${clippy_args}
+    end
+end
+'''
+
+#  ╭──────────────────────────────────────────────────────────╮
+#  │                  Validation Sequences                    │
+#  ╰──────────────────────────────────────────────────────────╯
+
+[tasks.validate_examples]
+description = "Run validation sequence for examples: check, build, test, clippy"
+category = "CI"
+dependencies = ["check_examples", "build_examples", "test_examples", "clippy_examples"]
+
+[tasks.validate_examples_targets]
+description = "Run validation for examples on all targets"
+category = "CI"
+dependencies = ["check_examples_targets", "build_examples_targets", "test_examples_targets", "clippy_examples_targets"]
+
+[tasks.validate_examples_strict]
+description = "Run validation for examples with strict clippy"
+category = "CI"
+env = { "STRICT" = "1" }
+dependencies = ["check_examples", "build_examples", "test_examples", "clippy_examples"]

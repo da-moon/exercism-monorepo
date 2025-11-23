@@ -1,0 +1,32 @@
+# Rustfmt configuration for SBOM Graph Analyzer (Stable toolchain)
+# https://rust-lang.github.io/rustfmt/
+
+# Maximum width of each line
+max_width = 100
+
+# Use Unix line endings
+newline_style = "Unix"
+
+# Use field initialize shorthand if possible
+use_field_init_shorthand = true
+
+# Use spaces for indentation
+hard_tabs = false
+
+# Number of spaces per tab
+tab_spaces = 4
+
+# Reorder import statements
+reorder_imports = true
+
+# Reorder module statements  
+reorder_modules = true
+
+# Put a trailing comma after a block based match arm
+match_block_trailing_comma = true
+
+# Use vertical layout for function arguments
+fn_params_layout = "Tall"
+
+# Edition
+edition = "2021"

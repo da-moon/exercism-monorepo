@@ -1,0 +1,68 @@
+# Clippy configuration for SBOM Graph Analyzer
+# https://rust-lang.github.io/rust-clippy/master/index.html
+
+# Maximum number of lines a function can have
+too-many-lines-threshold = 20
+
+# Maximum complexity score a function can have  
+cognitive-complexity-threshold = 15
+
+# Maximum number of arguments a function can have
+too-many-arguments-threshold = 5
+
+# Maximum nesting level for blocks
+excessive-nesting-threshold = 3
+
+# Enforce documentation for public items
+missing-docs-in-crate-items = true
+
+# Disallow certain macros
+disallowed-macros = [
+    # Disable debug macros in production code
+    "dbg",
+    "todo",
+    "unimplemented",
+]
+
+# Warn on large enum variants
+enum-variant-size-threshold = 200
+
+# Maximum size of an array to inline
+array-size-threshold = 512
+
+# Maximum number of single char bindings
+single-char-binding-names-threshold = 3
+
+# Enforce MSRV (Minimum Supported Rust Version)
+msrv = "1.70.0"
+
+# Allow certain lints in test code
+allow-dbg-in-tests = true
+allow-print-in-tests = true
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true
+
+# Documentation requirements
+doc-valid-idents = [
+    "CycloneDX",
+    "SPDX", 
+    "SBOM",
+    "GraphQL",
+    "WebSocket",
+    "UUID",
+    "CVSS",
+    "CVE",
+    "CPE",
+    "PURL",
+    "SurrealDB",
+    "Qdrant",
+    "OpenAI",
+    "LLM",
+]
+
+# Avoid common mistakes
+avoid-breaking-exported-api = false
+
+# Type complexity threshold
+type-complexity-threshold = 250
+
