@@ -17,21 +17,26 @@ release = get_env RELEASE
 crate_name = basename ${member}
 crate_version = set dev
 
-# Prefer the declared package version via `cargo pkgid` (workspace-safe)
-pkgid_cmd = concat "cargo pkgid --manifest-path " ${member} "/Cargo.toml"
-pkgid_raw = exec_output ${pkgid_cmd}
-if not is_empty ${pkgid_raw}
-    pkgid_raw = trim ${pkgid_raw}
-    parts_hash = split ${pkgid_raw} "#"
-    if array_size ${parts_hash} > 1
-        id_tail = array_get ${parts_hash} 1
-    else
-        id_tail = ${pkgid_raw}
-    end
-
-    parts_at = split ${id_tail} "@"
-    if array_size ${parts_at} > 1
-        crate_version = array_get ${parts_at} 1
+# Prefer the declared package version via simple TOML string split
+member_toml = concat ${member} "/Cargo.toml"
+if is_path_exists ${member_toml}
+    cargo_content = readfile ${member_toml}
+    lines = split ${cargo_content} "\n"
+    for line in ${lines}
+        t = trim ${line}
+        if starts_with ${t} "version"
+            parts = split ${t} "\""
+            if array_size ${parts} > 1
+                crate_version = array_get ${parts} 1
+            else
+                eq_parts = split ${t} "="
+                if array_size ${eq_parts} > 1
+                    v_raw = array_get ${eq_parts} 1
+                    v_raw = trim ${v_raw}
+                    crate_version = set ${v_raw}
+                end
+            end
+        end
     end
 end
 
