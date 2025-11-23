@@ -1,5 +1,5 @@
 [tasks.run]
-description = "Run the binary (single-crate convenience)"
+description = "Run the binary (single-crate convenience). Tip: inside a workspace, cd into the crate or set MEMBER and use workspace tasks."
 category = "Development"
 dependencies = ["init"]
 condition = { files_exist = ["src/main.rs"] }
@@ -36,7 +36,7 @@ exec --fail-on-error cargo %{args_string}
 '''
 
 [tasks.build]
-description = "Build current crate for host target"
+description = "Build current crate for host target. For workspaces, either run inside the crate dir or use workspace build_member."
 category = "Build"
 dependencies = ["init"]
 script_runner = "@duckscript"
@@ -83,7 +83,7 @@ exec --fail-on-error cargo %{args_string}
 '''
 
 [tasks.test]
-description = "Run tests for current crate (host target)"
+description = "Run tests for current crate (host target). In a workspace prefer workspace test_member with MEMBER=<crate>."
 category = "Test"
 dependencies = ["init"]
 script_runner = "@duckscript"
@@ -119,7 +119,7 @@ exec --fail-on-error cargo %{args_string}
 '''
 
 [tasks.check]
-description = "Run cargo check for current crate"
+description = "Run cargo check for current crate. In workspaces you can also use check_member MEMBER=<crate>."
 category = "Build"
 dependencies = ["init"]
 script_runner = "@duckscript"
@@ -155,7 +155,7 @@ exec --fail-on-error cargo %{args_string}
 '''
 
 [tasks.clippy]
-description = "Run clippy for current crate"
+description = "Run clippy for current crate. In workspaces, clippy_member MEMBER=<crate> avoids changing directories."
 category = "Build"
 dependencies = ["init"]
 script_runner = "@duckscript"
@@ -269,7 +269,7 @@ command = "cargo"
 args = ["clean"]
 
 [tasks.doc]
-description = "Generate documentation (no dependencies) for the current crate"
+description = "Generate documentation (no deps) for the current crate. In workspaces, either run from the crate dir or use workspace doc."
 category = "Documentation"
 dependencies = ["init"]
 script_runner = "@duckscript"

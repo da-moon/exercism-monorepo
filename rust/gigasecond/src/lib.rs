@@ -1,11 +1,6 @@
-extern crate chrono;
-use chrono::{DateTime, Utc};
+use time::{Duration, PrimitiveDateTime};
 
-// Returns a Utc DateTime one billion seconds after start.
-pub fn after(start: DateTime<Utc>) -> DateTime<Utc> {
-    let mut offset = 1;
-    for _ in 0..9 {
-        offset = offset * 10;
-    }
-    start + chrono::Duration::seconds(offset)
+/// Return the moment exactly one gigasecond after the provided start time.
+pub fn after(start: PrimitiveDateTime) -> PrimitiveDateTime {
+    start + Duration::seconds(1_000_000_000)
 }
