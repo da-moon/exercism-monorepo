@@ -1,23 +1,19 @@
-use std::collections::HashSet;
-
+use std::collections::BTreeSet;
 pub fn sum_of_multiples(limit: u32, factors: &[u32]) -> u32 {
-    factors
-        .iter()
-        .copied()
-        .filter(|x| *x > 0)
-        .map(|x| {
-            (1..)
-                .map_while(|xx| {
-                    // if xx * x < limit {
-                    //     return Some(xx * x)
-                    // }
-                    // None
-                    Some(xx * x).filter(|y| *y < limit)
-                })
-                .collect::<HashSet<u32>>()
-        })
-        .flatten()
-        .collect::<HashSet<u32>>()
-        .iter()
-        .sum::<u32>()
+    let mut result : u32 =0;
+    let mut result_set : BTreeSet<u32>= BTreeSet::new();
+    for factor in factors {
+        for number in 1..limit{
+            if number%factor == 0{
+                result_set.insert(number);
+            }
+        }
+    }
+    if result_set.len()>0 {
+
+        for item in result_set{
+            result+=item;
+        }
+    }
+    result
 }
