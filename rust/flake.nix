@@ -40,9 +40,11 @@
 
             # Build & performance
             sccache           # Compilation cache for faster builds
-            musl              # For static musl builds
             pkg-config
             openssl.dev
+            stdenv.cc         # C toolchain for linking native deps
+            binutils
+            glibc.dev         # Headers/libs for glibc target builds
 
             # Development tools
             lldb              # Debugger
