@@ -25,12 +25,12 @@ impl Clock {
             })
             .nth(1)
             .unwrap_or(0);
-        hours = minutes.div_euclid(60) ;
+        hours = minutes/60 ;
         if minutes > 0 {
-            minutes = minutes.rem_euclid(60) ;
+            minutes = minutes%60 ;
         }
         if hours > 0 {
-            hours = hours.rem_euclid(24);
+            hours = hours%24;
         }
         Clock{hours,minutes}
     }
