@@ -1,5 +1,0 @@
-# Placeholder: target-matrix build/check/test/clippy tasks were moved to
-# - contrib/cargo-make/build/Makefile.toml (build/check targets)
-# - contrib/cargo-make/test/Makefile.toml  (test targets)
-# - contrib/cargo-make/clippy/Makefile.toml (clippy targets)
-# This file remains so existing imports don't break; no tasks defined here.
