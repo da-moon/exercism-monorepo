@@ -1,0 +1,11 @@
+[tasks.clean]
+description = "Clean build artifacts for the current crate"
+category = "Build"
+command = "cargo"
+args = ["clean"]
+
+[tasks.clean_workspace]
+description = "Clean all workspace members"
+category = "Build"
+command = "cargo"
+args = ["clean"]

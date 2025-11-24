@@ -1,0 +1,54 @@
+[tasks.doc]
+description = "Generate documentation (no deps) for the current crate. In workspaces, either run from the crate dir or use workspace doc."
+category = "Documentation"
+dependencies = ["init"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "doc"
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+array_push ${args} "--no-deps"
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
+
+[tasks.doc_workspace]
+description = "Generate documentation for all workspace members"
+category = "Documentation"
+dependencies = ["init"]
+script_runner = "@duckscript"
+script = '''
+#!@duckscript
+args = array
+array_push ${args} "doc"
+array_push ${args} ${WORKSPACE_FLAG}
+
+feature_args = get_env FEATURE_ARGS
+if not is_empty ${feature_args}
+    parts = split ${feature_args} " "
+    for p in ${parts}
+        p = trim ${p}
+        if not is_empty ${p}
+            array_push ${args} ${p}
+        end
+    end
+end
+
+array_push ${args} "--no-deps"
+
+args_string = array_join ${args} " "
+exec --fail-on-error cargo %{args_string}
+'''
