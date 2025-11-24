@@ -30,4 +30,5 @@
 !/*/tests/**
 !/*/benches/**
 !/*/examples/**
-
+!/*/.exercism/
+!/*/.exercism/metadata.json
