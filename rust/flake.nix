@@ -27,6 +27,7 @@
           buildInputs = with pkgs; [
             # Rust toolchain with rust-analyzer
             rustToolchain
+            rust-analyzer
 
             # Essential cargo extensions
             cargo-make        # Primary build orchestrator
