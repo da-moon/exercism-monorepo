@@ -25,10 +25,10 @@
 !/contrib/**
 
 # Allow each exercise workspace member (directories with Cargo.toml)
-!/*/Cargo.toml
-!/*/src/**
-!/*/tests/**
-!/*/benches/**
-!/*/examples/**
-!/*/.exercism/
-!/*/.exercism/metadata.json
+!/**/Cargo.toml
+!/**/src/**
+!/**/tests/**
+!/**/benches/**
+!/**/examples/**
+!/**/.exercism/
+!/**/.exercism/metadata.json
