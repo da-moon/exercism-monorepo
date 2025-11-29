@@ -203,6 +203,10 @@ name = "series"
 version = "0.1.0"
 
 [[package]]
+name = "sublist"
+version = "0.1.0"
+
+[[package]]
 name = "sum-of-multiples"
 version = "1.5.0"
 

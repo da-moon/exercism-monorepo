@@ -20,5 +20,6 @@ members = [
   "saddle-points",
   "series",
   "sum-of-multiples",
+  "sublist",
 ]
 resolver = "2"
