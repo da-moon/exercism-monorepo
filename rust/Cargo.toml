@@ -21,5 +21,6 @@ members = [
   "series",
   "sum-of-multiples",
   "sublist",
+  "flower-field",
 ]
 resolver = "2"
